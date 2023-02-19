@@ -385,34 +385,48 @@ namespace Tomatech.RePalette.Editor
 
                         AddressableAssetGroup g = settings.FindGroup("RePalette Assets");
 
-                        if (evt.previousValue)
-                        {
-                            var oldGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(evt.previousValue));
-                            var oldEntry = g.entries.ToList().FirstOrDefault(e => e.guid == oldGUID);
-                            if (oldEntry != null)
-                            {
-                                settings.SetDirty(
-                                    AddressableAssetSettings.ModificationEvent.EntryRemoved,
-                                    settings.FindAssetEntry(oldGUID),
-                                    true);
-                                settings.RemoveAssetEntry(oldGUID, false);
-                            }
-                        }
-
+                        bool newValueSuccess = false;
                         if (evt.newValue)
                         {
                             var newGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(evt.newValue));
                             var newEntry = g.entries.ToList().FirstOrDefault(e => e.guid == newGUID);
                             bool newExists = newEntry != null;
-                            newEntry = settings.CreateOrMoveEntry(newGUID, g);
-                            newEntry.labels.Add(Database.ThemeFilter.EditorWindowFilter.ThemeKey);
-                            newEntry.address = objectField.userData as string;
-                            settings.SetDirty(
-                                newExists ?
-                                    AddressableAssetSettings.ModificationEvent.EntryMoved :
-                                    AddressableAssetSettings.ModificationEvent.EntryCreated,
-                                newEntry,
-                                true);
+                            if (!newExists || newEntry.address == objectField.userData as string || EditorUtility.DisplayDialog(
+                                "Warning",
+                                "This asset already has an Address. " +
+                                "Changing the address will remove references to this asset using it's previous address. " +
+                                "Do you want to continue?",
+                                "Yes", "NO, $H!7, GO BACK"))
+                            {
+                                newEntry = settings.CreateOrMoveEntry(newGUID, g);
+                                newEntry.labels.Add(themeKey);
+                                newEntry.address = objectField.userData as string;
+                                settings.SetDirty(
+                                    newExists ?
+                                        AddressableAssetSettings.ModificationEvent.EntryMoved :
+                                        AddressableAssetSettings.ModificationEvent.EntryCreated,
+                                    newEntry,
+                                    true);
+                                newValueSuccess = true;
+                            }
+                        }
+
+                        if (evt.previousValue && newValueSuccess)
+                        {
+                            var oldGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(evt.previousValue));
+                            var oldEntry = g.entries.ToList().FirstOrDefault(e => e.guid == oldGUID);
+                            if (oldEntry != null)
+                            {
+                                oldEntry.labels.Remove(themeKey);
+                                if (oldEntry.labels.Count == 0)
+                                {
+                                    settings.SetDirty(
+                                        AddressableAssetSettings.ModificationEvent.EntryRemoved,
+                                        oldEntry,
+                                        true);
+                                    settings.RemoveAssetEntry(oldGUID, false);
+                                }
+                            }
                         }
 
                         AssetDatabase.SaveAssets();
@@ -443,7 +457,8 @@ namespace Tomatech.RePalette.Editor
                                 var siblings = Database.WindowSelectedCategory.entries.Select(e => e.addressableKey).ToList();
                                 if (!siblings.Contains(r) && EditorUtility.DisplayDialog(
                                 "Warning",
-                                "All references to this asset slot will be lost. Proceed?", "Yes", "NO, $H!7, GO BACK"))
+                                "All references to this asset slot will be lost. Proceed?", 
+                                "Yes", "NO, $H!7, GO BACK"))
                                 {
                                     (keyLabel.parent.parent.userData as ThemeAssetEntry).addressableKey = r;
                                     assetList.RefreshItems();
