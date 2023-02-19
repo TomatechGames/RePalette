@@ -1,0 +1,94 @@
+.theme-manager-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-align: middle-left;
+}
+
+.theme-manager-back-button {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    -unity-text-align: upper-left;
+}
+
+.theme-manager-back-button .theme-manager-label {
+    padding-left: 10px;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.theme-manager-group-button {
+    -unity-text-align: middle-right;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.theme-manager-group-button .theme-manager-label {
+    padding-left: 0;
+    padding-right: 10px;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.theme-manager-category-button {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.active {
+    background-color: rgb(70, 96, 124);
+    border-left-color: rgb(36, 36, 36);
+    border-right-color: rgb(36, 36, 36);
+    border-top-color: rgb(13, 13, 13);
+    border-bottom-color: rgb(36, 36, 36);
+}
+
+.active:focus {
+    border-left-color: rgb(123, 174, 250);
+    border-right-color: rgb(123, 174, 250);
+    border-top-color: rgb(123, 174, 250);
+    border-bottom-color: rgb(123, 174, 250);
+}
+
+.theme-manager-asset-entry {
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.theme-manager-asset-content {
+    overflow: hidden;
+    width: 40%;
+    -unity-text-align: middle-left;
+}
+
+.theme-manager-asset-arrow {
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    width: 10%;
+}
+
+.theme-manager-header {
+    flex-grow: 1;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    padding-right: 2px;
+}
+
+.theme-manager-filter #PropContainer {
+    flex-direction: row;
+}
+
+.theme-manager-filter #PropHeader {
+    display: none;
+}

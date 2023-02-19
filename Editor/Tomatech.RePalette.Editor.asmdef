@@ -1,0 +1,19 @@
+{
+    "name": "Tomatech.Repalette.Editor",
+    "rootNamespace": "Tomatech.RePalette.Editor",
+    "references": [
+        "GUID:256b89ff21d4c0c4ab2bbf4bc79ce911",
+        "GUID:69448af7b92c7f342b298e06a37122aa"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

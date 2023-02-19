@@ -1,0 +1,55 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.tomatech.repalette/Editor/RePaletteWindowStyles.uss?fileID=7433441132597879392&amp;guid=11061dccc44494a489d406a0da504af4&amp;type=3#RePaletteWindowStyles" />
+    <uie:Toolbar name="MainToolbar" style="height: 21px;">
+        <uie:ToolbarSpacer style="flex-grow: 1;" />
+        <uie:ToolbarButton text="Debug Reload" display-tooltip-when-elided="true" name="DebugReload" style="display: flex;" />
+    </uie:Toolbar>
+    <ui:VisualElement name="MainContent" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); justify-content: center;">
+        <ui:VisualElement name="NoDatabasePanel" style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); flex-shrink: 0; width: auto; align-items: stretch; justify-content: center; align-self: center; display: none;">
+            <ui:Label tabindex="-1" text="Couldn&apos;t find a RePalette Database in the project. &#10;Would you like to create one?" display-tooltip-when-elided="true" style="-unity-text-align: upper-center;" />
+            <ui:Button text="Create RePalette Database" display-tooltip-when-elided="true" name="NoDatabaseButton" />
+        </ui:VisualElement>
+        <ui:TwoPaneSplitView name="BrowserRoot" fixed-pane-index="0" fixed-pane-initial-dimension="250" style="min-height: 10px; display: flex;">
+            <ui:VisualElement name="CategoryPanel" style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); min-width: 150px; width: 50px; max-width: none;">
+                <uie:Toolbar style="justify-content: center;">
+                    <uie:ToolbarButton text="&lt;" display-tooltip-when-elided="true" focusable="false" name="CategoryBackButton" style="position: relative; left: 0; top: 0; bottom: 0; width: 30px; -unity-text-align: middle-center; flex-shrink: 0;" />
+                    <ui:Label tabindex="-1" text="Current Category Group" display-tooltip-when-elided="true" name="CategoryHeader" class="theme-manager-header" />
+                    <uie:ToolbarMenu tabindex="-1" display-tooltip-when-elided="true" text="+" name="CreateCategoryButton" style="-unity-text-align: middle-center; width: 30px; border-right-width: 0;" />
+                </uie:Toolbar>
+                <uie:Toolbar>
+                    <uie:ToolbarSearchField focusable="true" name="SearchCategory" style="flex-grow: 1; width: 32px; -unity-text-align: upper-left; margin-left: 3px; margin-right: 3px;" />
+                </uie:Toolbar>
+                <ui:VisualElement name="CategoryListPanel" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); position: relative;">
+                    <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); position: absolute; left: 0; top: 0; right: 0; bottom: 0; justify-content: center; align-items: center;">
+                        <ui:Label tabindex="-1" text="Empty..." display-tooltip-when-elided="true" name="EmptyLabel" style="-unity-font-style: italic; color: rgb(127, 127, 127);" />
+                    </ui:VisualElement>
+                    <ui:ListView focusable="true" show-alternating-row-backgrounds="All" name="CategoryList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:TwoPaneSplitView fixed-pane-index="1" orientation="Horizontal" fixed-pane-initial-dimension="150" style="min-height: 10px; display: flex; min-width: 300px;">
+                <ui:VisualElement name="AssetPanel" style="min-width: 150px;">
+                    <uie:Toolbar>
+                        <uie:ToolbarButton text="&lt;" display-tooltip-when-elided="true" focusable="false" name="AssetBackButton" style="position: relative; left: 0; top: 0; bottom: 0; width: 30px; -unity-text-align: middle-center; flex-shrink: 0;" />
+                        <ui:Label tabindex="-1" text="Current Category" display-tooltip-when-elided="true" name="AssetHeader" class="theme-manager-header" />
+                        <uie:ToolbarButton text="+" display-tooltip-when-elided="true" focusable="false" name="CreateAssetButton" style="position: relative; left: 0; top: 0; bottom: 0; width: 30px; -unity-text-align: middle-center; flex-shrink: 0; border-right-width: 0;" />
+                    </uie:Toolbar>
+                    <ui:VisualElement name="Dummy" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); display: none;">
+                        <ui:VisualElement class="theme-manager-asset-entry">
+                            <ui:Label text="Bottom Left" display-tooltip-when-elided="true" class="theme-manager-asset-content" />
+                            <ui:Label text="=&gt;" class="theme-manager-asset-arrow" />
+                            <uie:ObjectField allow-scene-objects="false" class="theme-manager-asset-content" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:ListView focusable="true" name="AssetList" show-alternating-row-backgrounds="All" style="display: none; flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="SubAssetPanel" style="max-width: none; min-width: 150px;">
+                    <uie:Toolbar>
+                        <ui:Label tabindex="-1" text="Current Asset" display-tooltip-when-elided="true" name="SubAssetHeader" class="theme-manager-header" />
+                    </uie:Toolbar>
+                    <uie:Toolbar />
+                    <ui:ListView focusable="true" show-add-remove-footer="false" show-bound-collection-size="false" show-alternating-row-backgrounds="All" name="SubAssetList" reorderable="true" style="display: none; flex-grow: 1;" />
+                </ui:VisualElement>
+            </ui:TwoPaneSplitView>
+        </ui:TwoPaneSplitView>
+    </ui:VisualElement>
+</ui:UXML>

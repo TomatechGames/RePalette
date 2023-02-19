@@ -1,0 +1,9 @@
+{
+  "name": "com.tomatech.repalette",
+  "version": "0.1.0",
+  "displayName": "RePalette",
+  "dependencies": {
+    "com.unity.addressables": ""
+  },
+  "description": "A system for managing Addressable Assets that can change based on a predefined theme"
+}
