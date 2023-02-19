@@ -8,6 +8,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEngine.EventSystems.EventTrigger;
+using static UnityEditor.Progress;
 
 namespace Tomatech.RePalette.Editor
 {
@@ -162,7 +163,8 @@ namespace Tomatech.RePalette.Editor
                     var filterProp = new PropertyField();
                     filterProp.BindProperty(new SerializedObject(Database.ThemeFilter).FindProperty(Database.ThemeFilter.EditorWindowFilterName));
                     filterProp.RegisterValueChangeCallback(e => {
-                        CreateGUI();
+                        PopulateAssetPanel();
+                        PopulateSubAssetPanel();
                     });
                     filterProp.AddToClassList("theme-manager-filter");
                     filterProp.style.minWidth = 100;
@@ -370,6 +372,52 @@ namespace Tomatech.RePalette.Editor
                 {
                     var objectField = new ObjectField();
                     AppendCurrentContextMenu(objectField);
+                    objectField.RegisterValueChangedCallback( evt =>
+                    {
+                        if (!Database.ThemeFilter)
+                            return;
+                        Debug.Log(evt.previousValue + "  ->  " + evt.newValue);
+                        var settings = AddressableAssetSettingsDefaultObject.Settings;
+                        var themeKey = Database.ThemeFilter.EditorWindowFilter.ThemeKey;
+
+                        if (!settings.GetLabels().Contains(themeKey))
+                            settings.AddLabel(themeKey, false);
+
+                        AddressableAssetGroup g = settings.FindGroup("RePalette Assets");
+
+                        if (evt.previousValue)
+                        {
+                            var oldGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(evt.previousValue));
+                            var oldEntry = g.entries.ToList().FirstOrDefault(e => e.guid == oldGUID);
+                            if (oldEntry != null)
+                            {
+                                settings.SetDirty(
+                                    AddressableAssetSettings.ModificationEvent.EntryRemoved,
+                                    settings.FindAssetEntry(oldGUID),
+                                    true);
+                                settings.RemoveAssetEntry(oldGUID, false);
+                            }
+                        }
+
+                        if (evt.newValue)
+                        {
+                            var newGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(evt.newValue));
+                            var newEntry = g.entries.ToList().FirstOrDefault(e => e.guid == newGUID);
+                            bool newExists = newEntry != null;
+                            newEntry = settings.CreateOrMoveEntry(newGUID, g);
+                            newEntry.labels.Add(Database.ThemeFilter.EditorWindowFilter.ThemeKey);
+                            newEntry.address = objectField.userData as string;
+                            settings.SetDirty(
+                                newExists ?
+                                    AddressableAssetSettings.ModificationEvent.EntryMoved :
+                                    AddressableAssetSettings.ModificationEvent.EntryCreated,
+                                newEntry,
+                                true);
+                        }
+
+                        AssetDatabase.SaveAssets();
+                        assetList.RefreshItems();
+                    });
                     return objectField;
                 };
                 assetListColumns["ResolvedObjectCol"].makeCell = () =>
@@ -439,6 +487,7 @@ namespace Tomatech.RePalette.Editor
                         e.menu.AppendSeparator();
                         e.menu.AppendAction("Create Asset Slot", a => createAssetSlotAction());
                     }, 0));
+                    //listRow.RegisterCallback<ChangeEvent<UnityEngine.Object>>(e=>e.StopImmediatePropagation(), TrickleDown.TrickleDown);
                 };
                 assetListColumns["ConstraintCol"].bindCell = (e, i) =>
                 {
@@ -462,63 +511,14 @@ namespace Tomatech.RePalette.Editor
                     var objectE = (e as ObjectField);
                     var indexValue = (assetList.itemsSource as IList<ThemeAssetEntry>)[i];
 
-                    EventCallback<ChangeEvent<UnityEngine.Object>> changeEvent = evt =>
-                    {
-                        if (!Database.ThemeFilter)
-                            return;
-                        var settings = AddressableAssetSettingsDefaultObject.Settings;
-                        var existingLabels = settings.GetLabels();
-                        foreach (var item in Database.ThemeFilter.EditorWindowFilter.ThemeKeys)
-                        {
-                            if (!existingLabels.Contains(item))
-                            {
-                                settings.AddLabel(item, false);
-                                existingLabels.Add(item);
-                            }
-                        }
-                        AddressableAssetGroup g = settings.FindGroup("RePalette Assets");
 
-                        if (evt.previousValue)
-                        {
-                            var oldGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(evt.previousValue));
-                            bool oldExists = g.entries.ToList().Exists(e => e.guid == oldGUID);
-                            if (oldExists)
-                            {
-                                settings.SetDirty(
-                                    AddressableAssetSettings.ModificationEvent.EntryRemoved,
-                                    settings.FindAssetEntry(oldGUID),
-                                    true);
-                                settings.RemoveAssetEntry(oldGUID, false);
-                            }
-                        }
-
-                        if (evt.newValue)
-                        {
-                            var newGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(evt.newValue));
-                            bool newExists = g.entries.ToList().Exists(e => e.guid == newGUID);
-                            var newEntry = settings.CreateOrMoveEntry(newGUID, g);
-                            foreach (var item in Database.ThemeFilter.EditorWindowFilter.ThemeKeys)
-                                newEntry.labels.Add(item);
-                            newEntry.address = indexValue.addressableKey;
-                            settings.SetDirty(
-                                newExists ?
-                                    AddressableAssetSettings.ModificationEvent.EntryMoved :
-                                    AddressableAssetSettings.ModificationEvent.EntryCreated,
-                                newEntry,
-                                true);
-                        }
-
-                        AssetDatabase.SaveAssets();
-                        assetList.RefreshItems();
-                    };
-
-                    objectE.UnregisterValueChangedCallback(objectE.userData as EventCallback<ChangeEvent<UnityEngine.Object>>);
+                    //objectE.UnregisterValueChangedCallback(objectE.userData as EventCallback<ChangeEvent<UnityEngine.Object>>);
                     objectE.objectType = Database.GetEntryConstraintType(indexValue);
-                    objectE.value = TryGetAsset(indexValue.addressableKey, Database, true, out string[] themeKeys);
-                    objectE.RegisterValueChangedCallback(changeEvent);
-                    objectE.userData = changeEvent;
+                    objectE.SetValueWithoutNotify(TryGetAsset(indexValue.addressableKey, Database, true, out string themeKey));
+                    //objectE.value = ;
+                    objectE.userData = indexValue.addressableKey;
 
-                    objectE.tooltip = string.Join(", ", themeKeys);
+                    objectE.tooltip = themeKey;
 
 
                 };
@@ -527,8 +527,8 @@ namespace Tomatech.RePalette.Editor
                     var objectE = (e as ObjectField);
                     var indexValue = (assetList.itemsSource as IList<ThemeAssetEntry>)[i];
                     objectE.objectType = Database.GetEntryConstraintType(indexValue);
-                    objectE.value = TryGetAsset(indexValue.addressableKey, Database, false, out string[] themeKeys);
-                    objectE.tooltip = string.Join(", ", themeKeys);
+                    objectE.value = TryGetAsset(indexValue.addressableKey, Database, false, out string themeKey);
+                    objectE.tooltip = string.Join(", ", themeKey);
                 };
                 assetListColumns["KeyCol"].bindCell = (e, i) =>
                 {
@@ -682,6 +682,7 @@ namespace Tomatech.RePalette.Editor
         {
             var assetPanel = rootVisualElement.Q<VisualElement>("AssetPanel");
             var assetList = rootVisualElement.Q<MultiColumnListView>("AssetList");
+            var cels = assetList.Query(null, "unity-multi-column-view__row-container").ToList();
 
             var assetHeader = assetPanel.Q<Label>("AssetHeader");
             assetHeader.text = Database.WindowSelectedCategory is null ? "No Category Selected" : Database.WindowSelectedCategory.path.Split("/")[^1];
@@ -692,7 +693,15 @@ namespace Tomatech.RePalette.Editor
                 assetList.itemsSource = null;
             else
                 assetList.itemsSource = Database.WindowSelectedCategory.entries;
-            
+
+            //EventCallback<ChangeEvent<UnityEngine.Object>> changeEvent = e => {
+            //    e.StopImmediatePropagation();
+            //    (e.currentTarget as VisualElement).UnregisterCallback((e.currentTarget as VisualElement).userData as EventCallback<ChangeEvent<UnityEngine.Object>>);
+            //    };
+            //cels.ForEach(e => {
+            //    e.Q<ObjectField>().parent.userData = changeEvent;
+            //    e.Q<ObjectField>().parent.RegisterCallback(changeEvent, TrickleDown.TrickleDown);
+            //    });
             assetList.RefreshItems();
         }
 
@@ -737,27 +746,27 @@ namespace Tomatech.RePalette.Editor
             subAssetList.RefreshItems();
         }
 
-        static UnityEngine.Object TryGetAsset(string primaryKey, RePaletteDatabase database, bool onlyDirect) => TryGetAsset(primaryKey, database, onlyDirect, out string[] _);
-        static UnityEngine.Object TryGetAsset(string primaryKey, RePaletteDatabase database, bool onlyDirect, out string[] themeKeys)
+        static UnityEngine.Object TryGetAsset(string primaryKey, RePaletteDatabase database, bool onlyDirect) => TryGetAsset(primaryKey, database, onlyDirect, out string _);
+        static UnityEngine.Object TryGetAsset(string primaryKey, RePaletteDatabase database, bool onlyDirect, out string themeKey)
         {
             if (!database.ThemeFilter)
             {
-                themeKeys = new string[0];
+                themeKey = null;
                 return null;
             }
             UnityEngine.Object result;
-            themeKeys = database.ThemeFilter.EditorWindowFilter.ThemeKeys;
-            result = LoadAddressInEditor<UnityEngine.Object>(primaryKey, database.ThemeFilter.EditorWindowFilter.ThemeKeys);
+            themeKey = database.ThemeFilter.EditorWindowFilter.ThemeKey;
+            result = LoadAddressInEditor<UnityEngine.Object>(primaryKey, database.ThemeFilter.EditorWindowFilter.ThemeKey);
             if (!result && !onlyDirect)
             {
-                themeKeys = database.ThemeFilter.EditorWindowFilter.GetInheritedThemeKeys(themeKeys => GetAddressEntry(primaryKey, themeKeys) != null);
-                if (themeKeys.Length != 0)
-                    result = LoadAddressInEditor<UnityEngine.Object>(primaryKey, themeKeys);
+                themeKey = database.ThemeFilter.EditorWindowFilter.GetInheritedThemeKeys(themeKeys => GetAddressEntry(primaryKey, themeKeys) != null);
+                if (themeKey!=null)
+                    result = LoadAddressInEditor<UnityEngine.Object>(primaryKey, themeKey);
                 else
                     result = null;
             }
             if (!result)
-                themeKeys = new string[0];
+                themeKey = null;
 
             return result;
         }
