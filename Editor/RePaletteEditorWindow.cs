@@ -123,6 +123,17 @@ namespace Tomatech.RePalette.Editor
             }
         }
 
+        string GenerateAddress()
+        {
+            var siblings = Database.themeAssets.SelectMany(g => g.entries).Select(e => e.addressableKey).ToList();
+            var newAddress = UnityEngine.Random.Range(short.MinValue, short.MaxValue).ToString();
+            while (siblings.Contains(newAddress))
+            {
+                newAddress = UnityEngine.Random.Range(short.MinValue, short.MaxValue).ToString();
+            }
+            return newAddress;
+        }
+
         internal void CreateGUIInternal() => CreateGUI();
 
         private void CreateGUI()
@@ -335,7 +346,7 @@ namespace Tomatech.RePalette.Editor
 
                 Action createAssetSlotAction = () =>
                 {
-                    (assetList.itemsSource as IList<ThemeAssetEntry>).Add(new ThemeAssetEntry() { humanKey = "Bruh Sequel", addressableKey = "69420" });
+                    (assetList.itemsSource as IList<ThemeAssetEntry>).Add(new ThemeAssetEntry() { humanKey = "New Entry", addressableKey = GenerateAddress() });
                     PopulateAssetPanel();
                 };
 
@@ -454,7 +465,7 @@ namespace Tomatech.RePalette.Editor
                             rootRect.y -= rootRect.height;
                             UnityEditor.PopupWindow.Show(rootRect, new RePaletteRenamePopupWindow(r =>
                             {
-                                var siblings = Database.WindowSelectedCategory.entries.Select(e => e.addressableKey).ToList();
+                                var siblings = Database.themeAssets.SelectMany(g=>g.entries).Select(e => e.addressableKey).ToList();
                                 if (!siblings.Contains(r) && EditorUtility.DisplayDialog(
                                 "Warning",
                                 "All references to this asset slot will be lost. Proceed?", 
