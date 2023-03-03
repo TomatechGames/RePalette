@@ -24,8 +24,6 @@ namespace Tomatech.RePalette.Editor
             set => themeFilter = value; 
         }
 
-        protected static readonly System.Type[] constraintTypeMap = { typeof(Object), typeof(Texture2D), typeof(ScriptableObject), typeof(TileBase), typeof(AudioClip) };
-
         public List<string> emptyCategoryGroups = new(); public List<ThemeAssetCategory> themeAssets = new();
 
         public virtual ThemeAssetCategory WindowSelectedCategory { get; set; }
@@ -56,17 +54,18 @@ namespace Tomatech.RePalette.Editor
             }
         }
 
-        public virtual List<System.Type> ValidConstraints => constraintTypeMap.ToList();
-
         public ThemeAssetEntry GetAssetEntryFromAddressableKey(string key)
         {
             return themeAssets.Select(c => c.entries.FirstOrDefault(e => e.addressableKey == key)).FirstOrDefault(e => e != null);
         }
 
-        public virtual System.Type GetEntryConstraintType(ThemeAssetEntry e)
-        {
-            return constraintTypeMap[e.constraintIndex];
-        }
+        protected static List<System.Type> ConcatTypeList(List<System.Type> a, params System.Type[] b) => a.Concat(b).ToList();
+
+        protected virtual List<System.Type> GenerateTypes => new() { typeof(Object), typeof(ScriptableObject), typeof(Texture2D), typeof(AudioClip) };
+        static List<System.Type> constraintTypeMap;
+        public List<System.Type> ValidConstraints => constraintTypeMap??=GenerateTypes;
+        public void RegenerateTypeConstraints()=> constraintTypeMap = GenerateTypes;
+        public virtual System.Type GetEntryConstraintType(ThemeAssetEntry e) => ValidConstraints[e.constraintIndex];
     }
 
 

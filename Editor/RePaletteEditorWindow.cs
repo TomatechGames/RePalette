@@ -154,16 +154,24 @@ namespace Tomatech.RePalette.Editor
             {
                 rootVisualElement.Q("BrowserRoot").style.display = DisplayStyle.None;
                 rootVisualElement.Q("NoDatabasePanel").style.display = DisplayStyle.Flex;
-                rootVisualElement.Q<Button>("NoDatabaseButton").clicked += () =>
+                var createDatabaseButton = rootVisualElement.Q<Button>("NoDatabaseButton");
+                createDatabaseButton.clicked += () =>
                 {
                     //EditorUtility.SetDirty(this);
                     //TODO: Database subclass selector
-                    var newDatabase = CreateInstance<RePaletteDatabase>();
-                    AssetDatabase.CreateAsset(newDatabase, "Assets/Settings/RePalette Database.asset");
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                    RePaletteDatabase.ResetDatabaseCheck();
-                    CreateGUI();
+                    var validFilterTypes = AppDomain.CurrentDomain.GetAssemblies()
+                            .SelectMany(a => a.GetTypes())
+                            .Where(t => t.IsSubclassOf(typeof(RePaletteDatabase)) || t==typeof(RePaletteDatabase))
+                            .ToList();
+                    EditorUtility.DisplayCustomMenu(createDatabaseButton.worldBound, validFilterTypes.Select(t => new GUIContent(t.Name)).ToArray(), -1, (_, __, i) =>
+                    {
+                        var newDatabase = CreateInstance(validFilterTypes[i]) as RePaletteDatabase;
+                        AssetDatabase.CreateAsset(newDatabase, "Assets/Settings/RePalette Database.asset");
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
+                        RePaletteDatabase.ResetDatabaseCheck();
+                        CreateGUI();
+                    }, null);
                 };
             }
             else
