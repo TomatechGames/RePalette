@@ -25,9 +25,11 @@ namespace Tomatech.RePalette
             var locationHandle = RepaletteResourceManager.ThemeFilter.GetThemeAssetLocation<T>(addressableKey);
             await locationHandle;
             IResourceLocation targetLocation = locationHandle.Result;
-            if (targetLocation == themeAssetLocation || targetLocation == null)
+            if (targetLocation == themeAssetLocation)
+                return themeAssetHandle.Value.Result.First(r => r.name == subAssetKey);
+            if (targetLocation == null)
                 return null;
-
+            Debug.Log("has theme location");
             if (themeAssetHandle != null)
                 Addressables.Release(themeAssetHandle.Value);
             var handle = Addressables.LoadAssetAsync<IList<T>>(targetLocation.PrimaryKey);
@@ -35,12 +37,14 @@ namespace Tomatech.RePalette
             var filteredHandleResults = handle.Result.Where(r => r.name == subAssetKey).ToList();
             if (handle.Status == AsyncOperationStatus.Succeeded && filteredHandleResults.Count > 0)
             {
+                Debug.Log("asset found");
                 themeAssetHandle = handle;
                 themeAssetLocation = targetLocation;
                 return filteredHandleResults[0];
             }
             else
             {
+                Debug.Log("asset not found: "+subAssetKey);
                 themeAssetHandle = null;
                 themeAssetLocation = null;
             }

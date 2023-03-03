@@ -18,7 +18,7 @@ namespace Tomatech.RePalette
         }
         public virtual async Task<IResourceLocation> GetThemeAssetLocation(string objectKey, System.Type typeFilter)
         {
-            var keyList = new List<string> { objectKey, ThemeKey};
+            var keyList = new List<string> { "RPe_"+objectKey, "RPt_"+ThemeKey};
             var locationHandle = Addressables.LoadResourceLocationsAsync(keyList, Addressables.MergeMode.Intersection, typeFilter).Task;
             await locationHandle;
             if (locationHandle.Result.Count == 0)

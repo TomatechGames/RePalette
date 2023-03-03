@@ -385,6 +385,7 @@ namespace Tomatech.RePalette.Editor
                     AppendCurrentContextMenu(objectField);
                     objectField.RegisterValueChangedCallback( evt =>
                     {
+                        //ADD PREFIXES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                         if (!Database.ThemeFilter)
                             return;
                         Debug.Log(evt.previousValue + "  ->  " + evt.newValue);
@@ -392,7 +393,7 @@ namespace Tomatech.RePalette.Editor
                         var themeKey = Database.ThemeFilter.EditorWindowFilter.ThemeKey;
 
                         if (!settings.GetLabels().Contains(themeKey))
-                            settings.AddLabel(themeKey, false);
+                            settings.AddLabel("RPt_"+themeKey, false);
 
                         AddressableAssetGroup g = settings.FindGroup("RePalette Assets");
 
@@ -402,16 +403,20 @@ namespace Tomatech.RePalette.Editor
                             var newGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(evt.newValue));
                             var newEntry = g.entries.ToList().FirstOrDefault(e => e.guid == newGUID);
                             bool newExists = newEntry != null;
-                            if (!newExists || newEntry.address == objectField.userData as string || EditorUtility.DisplayDialog(
+                            if (!newExists || newEntry.labels.Contains(objectField.userData as string) || EditorUtility.DisplayDialog(
                                 "Warning",
                                 "This asset already has an Address. " +
-                                "Changing the address will remove references to this asset using it's previous address. " +
+                                "Changing the address will remove references to this asset using it's previous address, and reset it's labels. " +
                                 "Do you want to continue?",
                                 "Yes", "NO, $H!7, GO BACK"))
                             {
                                 newEntry = settings.CreateOrMoveEntry(newGUID, g);
-                                newEntry.labels.Add(themeKey);
-                                newEntry.address = objectField.userData as string;
+                                newEntry.labels.Clear();
+                                newEntry.labels.Add("RPt_"+themeKey);
+                                var entryLabel = objectField.userData as string;
+                                if (!settings.GetLabels().Contains(entryLabel))
+                                    settings.AddLabel(entryLabel, false);
+                                newEntry.labels.Add(entryLabel);
                                 settings.SetDirty(
                                     newExists ?
                                         AddressableAssetSettings.ModificationEvent.EntryMoved :
@@ -421,6 +426,8 @@ namespace Tomatech.RePalette.Editor
                                 newValueSuccess = true;
                             }
                         }
+                        else
+                            newValueSuccess = true;
 
                         if (evt.previousValue && newValueSuccess)
                         {
@@ -428,14 +435,14 @@ namespace Tomatech.RePalette.Editor
                             var oldEntry = g.entries.ToList().FirstOrDefault(e => e.guid == oldGUID);
                             if (oldEntry != null)
                             {
-                                oldEntry.labels.Remove(themeKey);
-                                if (oldEntry.labels.Count == 0)
+                                oldEntry.SetLabel(themeKey, false, true);
+                                if (oldEntry.labels.ToList().Exists(l=>l.StartsWith("RPt_")))
                                 {
+                                    settings.RemoveAssetEntry(oldGUID, false);
                                     settings.SetDirty(
                                         AddressableAssetSettings.ModificationEvent.EntryRemoved,
                                         oldEntry,
                                         true);
-                                    settings.RemoveAssetEntry(oldGUID, false);
                                 }
                             }
                         }
@@ -465,6 +472,8 @@ namespace Tomatech.RePalette.Editor
                             rootRect.y -= rootRect.height;
                             UnityEditor.PopupWindow.Show(rootRect, new RePaletteRenamePopupWindow(r =>
                             {
+                                if (r == "")
+                                    r = GenerateAddress();
                                 var siblings = Database.themeAssets.SelectMany(g=>g.entries).Select(e => e.addressableKey).ToList();
                                 if (!siblings.Contains(r) && EditorUtility.DisplayDialog(
                                 "Warning",
@@ -542,7 +551,7 @@ namespace Tomatech.RePalette.Editor
                     objectE.objectType = Database.GetEntryConstraintType(indexValue);
                     objectE.SetValueWithoutNotify(TryGetAsset(indexValue.addressableKey, Database, true, out string themeKey));
                     //objectE.value = ;
-                    objectE.userData = indexValue.addressableKey;
+                    objectE.userData = "RPe_"+indexValue.addressableKey;
 
                     objectE.tooltip = themeKey;
 
@@ -554,7 +563,7 @@ namespace Tomatech.RePalette.Editor
                     var indexValue = (assetList.itemsSource as IList<ThemeAssetEntry>)[i];
                     objectE.objectType = Database.GetEntryConstraintType(indexValue);
                     objectE.value = TryGetAsset(indexValue.addressableKey, Database, false, out string themeKey);
-                    objectE.tooltip = string.Join(", ", themeKey);
+                    objectE.tooltip = themeKey;
                 };
                 assetListColumns["KeyCol"].bindCell = (e, i) =>
                 {
@@ -708,7 +717,7 @@ namespace Tomatech.RePalette.Editor
         {
             var assetPanel = rootVisualElement.Q<VisualElement>("AssetPanel");
             var assetList = rootVisualElement.Q<MultiColumnListView>("AssetList");
-            var cels = assetList.Query(null, "unity-multi-column-view__row-container").ToList();
+            //var cels = assetList.Query(null, "unity-multi-column-view__row-container").ToList();
 
             var assetHeader = assetPanel.Q<Label>("AssetHeader");
             assetHeader.text = Database.WindowSelectedCategory is null ? "No Category Selected" : Database.WindowSelectedCategory.path.Split("/")[^1];
@@ -786,6 +795,7 @@ namespace Tomatech.RePalette.Editor
             if (!result && !onlyDirect)
             {
                 themeKey = database.ThemeFilter.EditorWindowFilter.GetInheritedThemeKeys(themeKeys => GetAddressEntry(primaryKey, themeKeys) != null);
+                //Debug.Log(themeKey);
                 if (themeKey!=null)
                     result = LoadAddressInEditor<UnityEngine.Object>(primaryKey, themeKey);
                 else
@@ -803,7 +813,7 @@ namespace Tomatech.RePalette.Editor
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
 
             List<AddressableAssetEntry> allEntries = new(settings.groups.SelectMany(g => g.entries));
-            AddressableAssetEntry foundEntry = allEntries.FirstOrDefault(e => e.address == address && labels.Where(l => !e.labels.Contains(l)).Count() == 0);
+            AddressableAssetEntry foundEntry = allEntries.FirstOrDefault(e => e.labels.Contains("RPe_"+address) && labels.Where(l => !e.labels.Contains("RPt_"+l)).Count() == 0);
             return foundEntry;
         }
         static TValue LoadAddressInEditor<TValue>(string address, params string[] labels)
@@ -816,3 +826,4 @@ namespace Tomatech.RePalette.Editor
         }
     }
 }
+ 
