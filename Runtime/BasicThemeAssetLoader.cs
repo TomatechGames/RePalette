@@ -6,7 +6,7 @@ using UnityEngine.Events;
 
 namespace Tomatech.RePalette
 {
-    public class ThemeAssetLoader : MonoBehaviour, IThemeable
+    public class BasicThemeAssetLoader : MonoBehaviour, IThemeable
     {
         [SerializeField]
         ThemeAssetReference<Sprite> assetRef;
