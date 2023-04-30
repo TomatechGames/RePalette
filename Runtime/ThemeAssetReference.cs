@@ -25,26 +25,44 @@ namespace Tomatech.RePalette
             var locationHandle = RepaletteResourceManager.ThemeFilter.GetThemeAssetLocation<T>(addressableKey);
             await locationHandle;
             IResourceLocation targetLocation = locationHandle.Result;
-            if (targetLocation == themeAssetLocation)
-                return themeAssetHandle.Value.Result.First(r => r.name == subAssetKey);
             if (targetLocation == null)
                 return null;
             Debug.Log("has theme location");
+            if (targetLocation == themeAssetLocation)
+                return themeAssetHandle.Value.Result.First(r => subAssetKey == "" || r.name == subAssetKey);
+            Debug.Log("theme not cached");
             if (themeAssetHandle != null)
                 Addressables.Release(themeAssetHandle.Value);
             var handle = Addressables.LoadAssetAsync<IList<T>>(targetLocation.PrimaryKey);
             await handle.Task;
-            var filteredHandleResults = handle.Result.Where(r => r.name == subAssetKey).ToList();
-            if (handle.Status == AsyncOperationStatus.Succeeded && filteredHandleResults.Count > 0)
+
+            if (subAssetKey == "")
             {
-                Debug.Log("asset found");
+                if (handle.Result.Count > 0 && handle.Result.FirstOrDefault(l => l) is T typedMainAsset)
+                {
+                    Debug.Log("main asset found");
+                    themeAssetHandle = handle;
+                    themeAssetLocation = targetLocation;
+                    return typedMainAsset;
+                }
+                Debug.Log("main asset not found");
+                Debug.Log(string.Join(", ", handle.Result));
+                themeAssetHandle = null;
+                themeAssetLocation = null;
+                return null;
+            }
+
+            var filteredHandleResults = handle.Result.Where(r => r.name == subAssetKey).ToList();
+            if (handle.Status == AsyncOperationStatus.Succeeded && filteredHandleResults.Count > 0 && filteredHandleResults.FirstOrDefault(l => l) is T typedSubAsset)
+            {
+                Debug.Log("sub asset found");
                 themeAssetHandle = handle;
                 themeAssetLocation = targetLocation;
-                return filteredHandleResults[0];
+                return typedSubAsset;
             }
             else
             {
-                Debug.Log("asset not found: "+subAssetKey);
+                Debug.Log("sub asset not found: "+subAssetKey);
                 themeAssetHandle = null;
                 themeAssetLocation = null;
             }

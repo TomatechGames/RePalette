@@ -77,7 +77,8 @@ namespace Tomatech.RePalette.Editor
 
                         addressSelectorButton.Q<Label>().text = e.humanKey;
                         addressSelectorLabel.style.unityFontStyleAndWeight = FontStyle.Normal;
-                        subAssetSelectorField.choices = keyEntry.enforcedSubAssets;
+                        if(keyEntry.enforcedSubAssets!=null)
+                            subAssetSelectorField.choices = keyEntry.enforcedSubAssets;
                         subAssetSelectorField.index = 0;
                         subAssetSelectorField.style.display = keyEntry.enforcedSubAssets.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
                         BindSubAssetSelector();
