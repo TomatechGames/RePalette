@@ -10,6 +10,8 @@ namespace Tomatech.RePalette
 {
     public abstract class ThemeFilterBase
     {
+        public const string THEME_PREFIX = "RPt_";
+        public const string ENTRY_PREFIX = "RPe_";
         public abstract string ThemeKey { get; }
         public virtual string GetInheritedThemeKeys(System.Func<string, bool> validator) => validator(ThemeKey) ? ThemeKey : null;
         public Task<IResourceLocation> GetThemeAssetLocation<TObject>(string objectKey) where TObject : Object
@@ -18,7 +20,7 @@ namespace Tomatech.RePalette
         }
         public virtual async Task<IResourceLocation> GetThemeAssetLocation(string objectKey, System.Type typeFilter)
         {
-            var keyList = new List<string> { "RPe_" + objectKey, "RPt_" + ThemeKey };
+            var keyList = new List<string> { ENTRY_PREFIX + objectKey, THEME_PREFIX + ThemeKey };
             var locationHandle = Addressables.LoadResourceLocationsAsync(keyList, Addressables.MergeMode.Intersection, typeFilter).Task;
             await locationHandle;
             if (locationHandle.Result.Count == 0)

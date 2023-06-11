@@ -7,13 +7,12 @@ using UnityEditor.AddressableAssets;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UnityEngine.EventSystems.EventTrigger;
-using static UnityEditor.Progress;
 
 namespace Tomatech.RePalette.Editor
 {
     public class RePaletteEditorWindow : EditorWindow
     {
+        const string ADDRESSABLES_GROUP_NAME = "RePalette Assets";
         static RePaletteDatabase Database => RePaletteDatabase.Database;
         [SerializeField]
         VisualTreeAsset m_UXML;
@@ -393,17 +392,25 @@ namespace Tomatech.RePalette.Editor
                     AppendCurrentContextMenu(objectField);
                     objectField.RegisterValueChangedCallback( evt =>
                     {
-                        //ADD PREFIXES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                         if (!Database.ThemeFilter)
                             return;
                         Debug.Log(evt.previousValue + "  ->  " + evt.newValue);
                         var settings = AddressableAssetSettingsDefaultObject.Settings;
+                        if (!settings)
+                        {
+                            Debug.LogWarning("Addressables has not been set up. Please set it up using \"Window/Asset Management/Addressables/Groups\"");
+                            return;
+                        }
                         var themeKey = Database.ThemeFilter.EditorWindowFilter.ThemeKey;
 
                         if (!settings.GetLabels().Contains(themeKey))
-                            settings.AddLabel("RPt_"+themeKey, false);
+                            settings.AddLabel(ThemeFilterBase.THEME_PREFIX + themeKey, false);
 
-                        AddressableAssetGroup g = settings.FindGroup("RePalette Assets");
+                        AddressableAssetGroup g = settings.FindGroup(ADDRESSABLES_GROUP_NAME);
+                        if (!g)
+                        {
+                            g = settings.CreateGroup(ADDRESSABLES_GROUP_NAME, false, false, false, null);
+                        }
 
                         bool newValueSuccess = false;
                         if (evt.newValue)
@@ -420,7 +427,7 @@ namespace Tomatech.RePalette.Editor
                             {
                                 newEntry = settings.CreateOrMoveEntry(newGUID, g);
                                 newEntry.labels.Clear();
-                                newEntry.labels.Add("RPt_"+themeKey);
+                                newEntry.labels.Add(ThemeFilterBase.THEME_PREFIX + themeKey);
                                 var entryLabel = objectField.userData as string;
                                 if (!settings.GetLabels().Contains(entryLabel))
                                     settings.AddLabel(entryLabel, false);
@@ -444,7 +451,7 @@ namespace Tomatech.RePalette.Editor
                             if (oldEntry != null)
                             {
                                 oldEntry.SetLabel(themeKey, false, true);
-                                if (oldEntry.labels.ToList().Exists(l=>l.StartsWith("RPt_")))
+                                if (oldEntry.labels.ToList().Exists(l=>l.StartsWith(ThemeFilterBase.THEME_PREFIX)))
                                 {
                                     settings.RemoveAssetEntry(oldGUID, false);
                                     settings.SetDirty(
@@ -559,7 +566,7 @@ namespace Tomatech.RePalette.Editor
                     objectE.objectType = Database.GetEntryConstraintType(indexValue);
                     objectE.SetValueWithoutNotify(TryGetAsset(indexValue.addressableKey, Database, true, out string themeKey));
                     //objectE.value = ;
-                    objectE.userData = "RPe_"+indexValue.addressableKey;
+                    objectE.userData = ThemeFilterBase.ENTRY_PREFIX + indexValue.addressableKey;
 
                     objectE.tooltip = themeKey;
 
@@ -819,9 +826,14 @@ namespace Tomatech.RePalette.Editor
         static AddressableAssetEntry GetAddressEntry(string address, params string[] labels)
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (!settings)
+            {
+                Debug.LogWarning("Addressables has not been set up. Please set it up using \"Window/Asset Management/Addressables/Groups\"");
+                return null;
+            }
 
             List<AddressableAssetEntry> allEntries = new(settings.groups.SelectMany(g => g.entries));
-            AddressableAssetEntry foundEntry = allEntries.FirstOrDefault(e => e.labels.Contains("RPe_"+address) && labels.Where(l => !e.labels.Contains("RPt_"+l)).Count() == 0);
+            AddressableAssetEntry foundEntry = allEntries.FirstOrDefault(e => e.labels.Contains(ThemeFilterBase.ENTRY_PREFIX + address) && labels.Where(l => !e.labels.Contains(ThemeFilterBase.THEME_PREFIX +l)).Count() == 0);
             return foundEntry;
         }
         static TValue LoadAddressInEditor<TValue>(string address, params string[] labels)

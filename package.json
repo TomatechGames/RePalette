@@ -1,6 +1,6 @@
 {
   "name": "com.tomatech.repalette",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "RePalette",
   "dependencies": {
     "com.unity.addressables": "1.21.10"

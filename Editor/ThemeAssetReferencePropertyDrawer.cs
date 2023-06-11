@@ -16,7 +16,12 @@ namespace Tomatech.RePalette.Editor
         {
             SerializedProperty keyProp = property.FindPropertyRelative("addressableKey");
             SerializedProperty subAssetProp = property.FindPropertyRelative("subAssetKey");
-            ThemeAssetEntry keyEntry = RePaletteDatabase.Database.GetAssetEntryFromAddressableKey(keyProp.stringValue);
+            ThemeAssetEntry keyEntry = null;
+
+            if (RePaletteDatabase.Database)
+                keyEntry = RePaletteDatabase.Database.GetAssetEntryFromAddressableKey(keyProp.stringValue);
+            else
+                Debug.LogWarning("RePalette has not been set up. Please set it up using \"Window/Tomatech/Repalette Theme Manager\"");
 
             var rootElement = new VisualElement();
             rootElement.AddToClassList("unity-base-field");
