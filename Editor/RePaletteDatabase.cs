@@ -93,6 +93,6 @@ namespace Tomatech.RePalette.Editor
         //public virtual System.Type[] ConstrainableTypes => constraintTypeMap;
         //public virtual System.Type ConstrainedType => constraintTypeMap[constraintIndex];
         public string addressableKey;
-        public List<string> enforcedSubAssets;
+        public List<string> enforcedSubAssets = new();
     }
 }
