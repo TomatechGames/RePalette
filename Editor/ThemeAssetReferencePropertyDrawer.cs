@@ -53,7 +53,7 @@ namespace Tomatech.RePalette.Editor
 
             void BindSubAssetSelector()
             {
-                if (keyEntry != null)
+                if (keyEntry != null && keyEntry.enforcedSubAssets != null)
                 {
                     var choiceList = keyEntry.enforcedSubAssets.ToList();
                     choiceList.Insert(0, "");
