@@ -22,6 +22,8 @@ namespace Tomatech.RePalette
 
         public async Task<T> GetAsset()
         {
+            if (RepaletteResourceManager.ThemeFilter == null)
+                return null;
             var locationHandle = RepaletteResourceManager.ThemeFilter.GetThemeAssetLocation<T>(addressableKey);
             await locationHandle;
             IResourceLocation targetLocation = locationHandle.Result;
