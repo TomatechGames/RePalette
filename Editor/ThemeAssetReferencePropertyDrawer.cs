@@ -85,7 +85,7 @@ namespace Tomatech.RePalette.Editor
                         if(keyEntry.enforcedSubAssets!=null)
                             subAssetSelectorField.choices = keyEntry.enforcedSubAssets;
                         subAssetSelectorField.index = 0;
-                        subAssetSelectorField.style.display = keyEntry.enforcedSubAssets.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                        subAssetSelectorField.style.display = (keyEntry.enforcedSubAssets != null && keyEntry.enforcedSubAssets.Count > 0) ? DisplayStyle.Flex : DisplayStyle.None;
                         BindSubAssetSelector();
                         //show or hide sub-asset button depending on if the entry has enforced subassets
                     }));
