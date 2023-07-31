@@ -41,10 +41,10 @@ namespace Tomatech.RePalette
             {
                 tasks.Add(registeredThemeables[i].UpdateThemeContent());
             }
-            Debug.Log("waiting for themeables to finish updating");
+            RepaletteConfig.Log("waiting for themeables to finish updating");
             await Task.WhenAll(tasks);
             onThemeUpdateCompleted?.Invoke();
-            Debug.Log("all themeables have updated");
+            RepaletteConfig.Log("all themeables have updated");
         }
     }
 

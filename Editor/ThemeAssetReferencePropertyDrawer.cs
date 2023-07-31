@@ -75,7 +75,7 @@ namespace Tomatech.RePalette.Editor
                     ScriptableObject.CreateInstance<ThemeAssetSearchProvider>()
                     .SetActionOnSelect(e =>
                     {
-                        Debug.Log(e.addressableKey);
+                        RepaletteConfig.Log(e.addressableKey);
                         keyProp.stringValue = e.addressableKey;
                         keyEntry = e;
                         property.serializedObject.ApplyModifiedProperties();

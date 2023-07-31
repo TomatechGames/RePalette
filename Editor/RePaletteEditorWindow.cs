@@ -394,7 +394,7 @@ namespace Tomatech.RePalette.Editor
                     {
                         if (!Database.ThemeFilter)
                             return;
-                        Debug.Log(evt.previousValue + "  ->  " + evt.newValue);
+                        RepaletteConfig.Log(evt.previousValue + "  ->  " + evt.newValue);
                         var settings = AddressableAssetSettingsDefaultObject.Settings;
                         if (!settings)
                         {
